@@ -11,6 +11,7 @@ buildscript {
 apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 
 task copyDockerFiles(type: Copy) {
     description = "Copy Dockerfile and required data to build directory"
@@ -21,9 +22,26 @@ task copyDockerFiles(type: Copy) {
     exclude "**/*.yml"
 }
 
+def rfbImageName = 'israelber/playingwithangular'
+
 task buildDocker(type: DockerBuildImage, dependsOn: 'copyDockerFiles') {
     description = "Package application as Docker image"
     group = "Docker"
     inputDir = project.file("${project.buildDir}/docker")
-    tags = ["playingwithangular:latest".toString(), "playingwithangular:${project.version}".toString()]
+    tags = ["${rfbImageName}:latest".toString(), "${rfbImageName}:${project.version}".toString()]
 }
+
+
+task pushDockerLatest(type: DockerPushImage, dependsOn: 'buildDocker') {
+    imageName = rfbImageName
+    tag = "latest"
+}
+
+/**
+ * Use to push project version tag to docker hub
+ */
+task pushDockerVersionTag(type: DockerPushImage, dependsOn: 'buildDocker') {
+    imageName = rfbImageName
+    tag =  "${project.version}".toString()
+}
+
